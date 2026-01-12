@@ -1,0 +1,7 @@
+{
+  "name": "RT Weather",
+  "description": "A sophisticated AI-powered weather application that provides real-time forecasts, historical trends, and intelligent AI insights for your daily activities.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
