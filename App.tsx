@@ -3,15 +3,25 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Cloud, Wind, Droplets, Thermometer, 
   MapPin, Sparkles, Navigation, RefreshCw,
-  Sun, Shirt, Activity, ShieldAlert, Layout
+  Sun, Shirt, Activity, ShieldAlert, Layout,
+  Wind as AirIcon
 } from 'lucide-react';
 import { getWeatherData } from './services/weatherService';
 import { getAIWeatherInsights } from './services/geminiService';
 import { WeatherData, AIInsight, GeocodingResult } from './types';
-import { WEATHER_INTERPRETATION, DEFAULT_CITY } from './constants';
+import { WEATHER_INTERPRETATION } from './constants';
 import SearchBar from './components/SearchBar';
 import ForecastChart from './components/ForecastChart';
 import WeatherWidgets from './components/WeatherWidgets';
+
+const getAQIStatus = (aqi: number) => {
+  if (aqi <= 50) return { label: 'Good', color: 'text-emerald-400', bg: 'bg-emerald-400/20' };
+  if (aqi <= 100) return { label: 'Moderate', color: 'text-yellow-400', bg: 'bg-yellow-400/20' };
+  if (aqi <= 150) return { label: 'Unhealthy for Sensitive', color: 'text-orange-400', bg: 'bg-orange-400/20' };
+  if (aqi <= 200) return { label: 'Unhealthy', color: 'text-red-400', bg: 'bg-red-400/20' };
+  if (aqi <= 300) return { label: 'Very Unhealthy', color: 'text-purple-400', bg: 'bg-purple-400/20' };
+  return { label: 'Hazardous', color: 'text-rose-600', bg: 'bg-rose-600/20' };
+};
 
 const App: React.FC = () => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -30,7 +40,7 @@ const App: React.FC = () => {
       const aiResponse = await getAIWeatherInsights(data);
       setInsights(aiResponse);
     } catch (err) {
-      setError("Unable to fetch weather data. Please try again.");
+      setError("Unable to fetch weather and air quality data. Please try again.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -75,6 +85,7 @@ const App: React.FC = () => {
 
   const WeatherIcon = weather ? (WEATHER_INTERPRETATION[weather.current.weatherCode]?.icon || Cloud) : Cloud;
   const weatherLabel = weather ? (WEATHER_INTERPRETATION[weather.current.weatherCode]?.label || "Cloudy") : "Cloudy";
+  const aqiInfo = weather ? getAQIStatus(weather.current.aqi) : null;
 
   return (
     <div className="min-h-screen bg-slate-950 pb-12 overflow-x-hidden">
@@ -156,13 +167,19 @@ const App: React.FC = () => {
                         <div className="text-8xl md:text-9xl font-bold text-white mb-4 tracking-tighter">
                           {Math.round(weather.current.temp)}°
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-4">
                           <div className="px-4 py-1.5 bg-blue-500/20 border border-blue-500/20 rounded-full text-blue-400 font-semibold text-sm">
                             {weatherLabel}
                           </div>
                           <div className="text-slate-400 font-medium">
                             H: {Math.round(weather.daily[0].maxTemp)}° L: {Math.round(weather.daily[0].minTemp)}°
                           </div>
+                          {aqiInfo && (
+                            <div className={`px-4 py-1.5 ${aqiInfo.bg} border border-white/10 rounded-full ${aqiInfo.color} font-semibold text-sm flex items-center gap-2`}>
+                              <AirIcon className="h-3.5 w-3.5" />
+                              AQI: {weather.current.aqi} ({aqiInfo.label})
+                            </div>
+                          )}
                         </div>
                       </div>
                       

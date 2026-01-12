@@ -8,6 +8,7 @@ export interface WeatherData {
     condition: string;
     weatherCode: number;
     isDay: boolean;
+    aqi: number; // US AQI
   };
   daily: Array<{
     date: string;
